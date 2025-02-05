@@ -8,7 +8,9 @@ const nextConfig: NextConfig = {
       type: 'asset/resource'
     });
     return config;
-  }
+  },
+  // Vercel用の設定を追加
+  output: 'standalone',
 };
 
 export default nextConfig;
