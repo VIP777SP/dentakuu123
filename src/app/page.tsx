@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import Image from "next/image";
 import styles from "./page.module.css";
 
 export default function Calculator() {
@@ -16,7 +15,6 @@ export default function Calculator() {
 
   // 音声の初期化を修正
   const initializeAudio = useCallback(() => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const audioElements = {
       number: new Audio('/sounds/number.mp3'),
       operator: new Audio('/sounds/operator.mp3'),
@@ -24,7 +22,6 @@ export default function Calculator() {
       clear: new Audio('/sounds/clear.mp3')
     };
 
-    // 音声ファイルをプリロード
     Object.values(audioElements).forEach(audio => {
       audio.load();
     });
@@ -43,19 +40,16 @@ export default function Calculator() {
     return () => document.removeEventListener('click', handleFirstInteraction);
   }, [initializeAudio]);
 
-  // 音声再生関数を修正
+  // 音声再生関数
   const playSound = useCallback((soundType: 'number' | 'operator' | 'equals' | 'clear') => {
     if (sounds[soundType]) {
       try {
         sounds[soundType]!.currentTime = 0;
-        const playPromise = sounds[soundType]!.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error('Sound play error:', error);
-          });
-        }
-      } catch (error) {
-        console.error('Sound error:', error);
+        sounds[soundType]!.play().catch(() => {
+          // エラーログを削除
+        });
+      } catch {
+        // エラーログを削除
       }
     }
   }, [sounds]);
@@ -83,7 +77,7 @@ export default function Calculator() {
       playSound('equals');
       setDisplay(String(result));
       setEquation('');
-    } catch (error) {
+    } catch {
       setDisplay('Error');
     }
   };
@@ -95,37 +89,22 @@ export default function Calculator() {
   };
 
   // または、複数フォーマットをサポートする場合：
-  const createAudio = (name: string) => {
+  const createAudio = useCallback((name: string) => {
     const audio = new Audio();
-    const sources = [
-      `/sounds/${name}.mp3`,
-      `/sounds/${name}.ogg`,
-      `/sounds/${name}.wav`
-    ];
+    const sources = [`/sounds/${name}.mp3`];
     
-    // 最初に再生可能なフォーマットを使用
     for (const source of sources) {
       try {
         audio.src = source;
-        if (audio.canPlayType(getMediaType(source)) !== '') {
+        if (audio.canPlayType('audio/mpeg') !== '') {
           return audio;
         }
-      } catch (e) {
-        console.log(`Failed to load: ${source}`);
+      } catch {
+        // エラー処理を簡略化
       }
     }
     return audio;
-  };
-
-  const getMediaType = (source: string) => {
-    const ext = source.split('.').pop();
-    switch (ext) {
-      case 'mp3': return 'audio/mpeg';
-      case 'ogg': return 'audio/ogg';
-      case 'wav': return 'audio/wav';
-      default: return '';
-    }
-  };
+  }, []);
 
   useEffect(() => {
     setSounds({
@@ -134,13 +113,14 @@ export default function Calculator() {
       equals: createAudio('equals'),
       clear: createAudio('clear')
     });
-  }, []);
+  }, [createAudio]);
 
-  // デバッグ用のコードを追加
+  // デバッグ用のコードを修正
   useEffect(() => {
     const audio = new Audio('/sounds/number.mp3');
-    console.log('Audio loaded:', audio);
-    audio.play().catch(e => console.error('Audio play error:', e));
+    audio.play().catch(() => {
+      // エラーログを削除
+    });
   }, []);
 
   // プラスマイナス反転の処理を追加
@@ -184,7 +164,7 @@ export default function Calculator() {
       }
       
       setDisplay(String(result));
-    } catch (error) {
+    } catch {
       setDisplay('Error');
     }
   };
