@@ -33,11 +33,16 @@ export default function Calculator() {
   useEffect(() => {
     const handleFirstInteraction = () => {
       initializeAudio();
+      // クリックイベントを削除
       document.removeEventListener('click', handleFirstInteraction);
     };
 
     document.addEventListener('click', handleFirstInteraction);
-    return () => document.removeEventListener('click', handleFirstInteraction);
+    return () => {
+      // コンポーネントのアンマウント時にイベントリスナーを削除する
+      // ただし、handleFirstInteractionが実行される前にアンマウントされた場合のみ
+      document.removeEventListener('click', handleFirstInteraction);
+    }
   }, [initializeAudio]);
 
   // 音声再生関数
